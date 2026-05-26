@@ -34,3 +34,20 @@ async def on_ready():
     print(f"✅ SUCCESS: {bot.user} is online!")
 
 bot.run(os.getenv("DISCORD_TOKEN"))
+@bot.command()
+async def help(ctx):
+    embed = discord.Embed(
+        title="🤖 Super Bot Help",
+        description="Here's how to use me!",
+        color=discord.Color.blue()
+    )
+    embed.add_field(name="🏓 !ping", value="Check if I'm online", inline=False)
+    embed.add_field(name="📊 !rank", value="See your XP level", inline=False)
+    embed.add_field(name="🆘 !help", value="Show this help message", inline=False)
+    embed.set_footer(text="Made with ❤️ by YourName")
+    await ctx.send(embed=embed)
+    @bot.event
+async def on_member_join(member):
+    channel = member.guild.system_channel  # Or a specific channel
+    if channel:
+        await channel.send(f"👋 Welcome {member.mention}! Type `!help` to get started with Super Bot!")
