@@ -47,7 +47,8 @@ class Leveling(commands.Cog):
             
             # Fetch new XP and calculate level
             cursor = conn.execute("SELECT xp FROM xp WHERE guild_id = ? AND user_id = ?", (guild_id, user_id))
-            new_xp = cursor.fetchone()[0]            new_level = int(new_xp ** 0.5) // 10 + 1
+            new_xp = cursor.fetchone()[0]
+            new_level = int(new_xp ** 0.5) // 10 + 1
             
             # Update level if it increased
             conn.execute("UPDATE xp SET level = ? WHERE guild_id = ? AND user_id = ?", (new_level, guild_id, user_id))
