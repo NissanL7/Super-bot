@@ -97,7 +97,8 @@ class Leveling(commands.Cog):
             return
 
         embed = discord.Embed(title="🏆 Server Leaderboard", color=0xf1c40f)
-        for i, (user_id, xp, level) in enumerate(top_users, start=1):            member = ctx.guild.get_member(int(user_id))
+        for i, (user_id, xp, level) in enumerate(top_users, start=1):
+            member = ctx.guild.get_member(int(user_id))
             name = member.display_name if member else f"Unknown User ({user_id})"
             embed.add_field(name=f"#{i} {name}", value=f"Level {level} | {xp} XP", inline=False)
         
