@@ -121,6 +121,8 @@ class HighTech(commands.Cog):
                         result = await resp.json()
 import discord
 from discord.ext import commands
+import discord
+from discord.ext import commands
 from discord import app_commands
 import aiohttp
 import os
