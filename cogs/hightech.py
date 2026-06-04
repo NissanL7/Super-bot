@@ -97,7 +97,8 @@ class StudyView(discord.ui.View):
 
     async def run_timer(self, interaction: discord.Interaction):
         await asyncio.sleep(1500) 
-        embed = discord.Embed(title="⏰ Time's Up!", description=f"Great job {self.user.mention}! Take a 5-minute break.", color=0x2ecc71)        await interaction.followup.send(embed=embed)
+        embed = discord.Embed(title="⏰ Time's Up!", description=f"Great job {self.user.mention}! Take a 5-minute break.", color=0x2ecc71)    
+        await interaction.followup.send(embed=embed)
         self.is_running = False
 
 async def setup(bot):
