@@ -47,7 +47,8 @@ class HighTech(commands.Cog):
                             color=0x9b59b6
                         )
                         embed.set_footer(text="Powered by Hugging Face - Mistral 7B")
-                        await interaction.followup.send(embed=embed)                    else:
+                        await interaction.followup.send(embed=embed)             
+                    else:
                         error_text = await resp.text()
                         await interaction.followup.send(f"❌ AI API Error: {resp.status}", ephemeral=True)
                         print(f"HF API Error: {error_text}")
