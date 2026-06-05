@@ -1,4 +1,5 @@
-import discord from discord.ext 
+import discord 
+import discord.ext 
 import commands
 import sqlite3
 import random
