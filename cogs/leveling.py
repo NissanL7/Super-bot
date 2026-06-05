@@ -1,7 +1,6 @@
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 import sqlite3
-import os
 import random
 
 class Leveling(commands.Cog):
@@ -9,7 +8,6 @@ class Leveling(commands.Cog):
         self.bot = bot
         self.db_file = "bot_data.db"
         self._init_db()
-        self.auto_save_xp.start() # Optional: used for batch operations if needed later
 
     def _init_db(self):
         """Initialize the SQLite database and create tables if they don't exist."""
@@ -36,27 +34,29 @@ class Leveling(commands.Cog):
         guild_id = message.guild.id
         user_id = message.author.id
 
-        with sqlite3.connect(self.db_file) as conn:
-            # Upsert: Insert or update XP
-            conn.execute("""
-                INSERT INTO xp (guild_id, user_id, xp, level)
-                VALUES (?, ?, 10, 1)
-                ON CONFLICT(guild_id, user_id) 
-                DO UPDATE SET xp = xp + 10
-            """, (guild_id, user_id))
-            
-            # Fetch new XP and calculate level
-            cursor = conn.execute("SELECT xp FROM xp WHERE guild_id = ? AND user_id = ?", (guild_id, user_id))
-            new_xp = cursor.fetchone()[0]
-            new_level = int(new_xp ** 0.5) // 10 + 1
-            
-            # Update level if it increased
-            conn.execute("UPDATE xp SET level = ? WHERE guild_id = ? AND user_id = ?", (new_level, guild_id, user_id))
-            
-            # Check if user leveled up to send a message
-            cursor = conn.execute("SELECT level FROM xp WHERE guild_id = ? AND user_id = ?", (guild_id, user_id))
-            # Note: For perfect level-up detection, you'd store the old level in memory, 
-            # but this simple check works for most starter bots.
+        try:
+            with sqlite3.connect(self.db_file) as conn:
+                # Upsert: Insert or update XP
+                conn.execute("""
+                    INSERT INTO xp (guild_id, user_id, xp, level)
+                    VALUES (?, ?, 10, 1)
+                    ON CONFLICT(guild_id, user_id) 
+                    DO UPDATE SET xp = xp + 10
+                """, (guild_id, user_id))
+                
+                # Fetch new XP and calculate level
+                cursor = conn.execute("SELECT xp, level FROM xp WHERE guild_id = ? AND user_id = ?", (guild_id, user_id))
+                row = cursor.fetchone()
+                                if row:
+                    new_xp, old_level = row
+                    new_level = int(new_xp ** 0.5) // 10 + 1
+                    
+                    # Update level if it increased
+                    if new_level > old_level:
+                        conn.execute("UPDATE xp SET level = ? WHERE guild_id = ? AND user_id = ?", (new_level, guild_id, user_id))
+                        await message.channel.send(f"🎉 {message.author.mention} reached Level {new_level}!")
+        except Exception as e:
+            print(f"Database error: {e}")
 
     @commands.command()
     async def rank(self, ctx, member: discord.Member = None):
@@ -96,8 +96,7 @@ class Leveling(commands.Cog):
             await ctx.send("No XP data available for this server yet.")
             return
 
-        embed = discord.Embed(title="🏆 Server Leaderboard", color=0xf1c40f)
-        for i, (user_id, xp, level) in enumerate(top_users, start=1):
+        embed = discord.Embed(title="🏆 Server Leaderboard", color=0xf1c40f)        for i, (user_id, xp, level) in enumerate(top_users, start=1):
             member = ctx.guild.get_member(int(user_id))
             name = member.display_name if member else f"Unknown User ({user_id})"
             embed.add_field(name=f"#{i} {name}", value=f"Level {level} | {xp} XP", inline=False)
