@@ -1,5 +1,6 @@
 import discord
-from discord.ext import commands
+from discord.ext 
+import commands
 import sqlite3
 import random
 
@@ -47,7 +48,7 @@ class Leveling(commands.Cog):
                 # Fetch new XP and calculate level
                 cursor = conn.execute("SELECT xp, level FROM xp WHERE guild_id = ? AND user_id = ?", (guild_id, user_id))
                 row = cursor.fetchone()
-              if row:
+             if row:
                     new_xp, old_level = row
                     new_level = int(new_xp ** 0.5) // 10 + 1
                     
