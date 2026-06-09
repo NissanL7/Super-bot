@@ -37,4 +37,9 @@ if __name__ == "__main__":
     bot.run(TOKEN)
     import threading
 # ... other imports
+# Start web server in a separate thread to keep Render happy
+server_thread = threading.Thread(target=run_server, daemon=True)
+server_thread.start()
+
+bot.run(TOKEN)
 from keep_alive import run_server
