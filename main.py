@@ -35,3 +35,5 @@ async def setup_hook():
 if __name__ == "__main__":
     # keep_alive() # Uncomment if using keep_alive.py
     bot.run(TOKEN)
+    import threading
+# ... other imports
