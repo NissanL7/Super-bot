@@ -37,3 +37,4 @@ if __name__ == "__main__":
     bot.run(TOKEN)
     import threading
 # ... other imports
+from keep_alive import run_server
