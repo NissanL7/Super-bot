@@ -123,6 +123,85 @@ async def setup(bot):
                 (guild_id, user_id)
             )
             result = cursor.fetchone()
+import discord
+from discord.ext import commands
+import sqlite3
+import random
+
+class Leveling(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+        self.db_file = "bot_data.db"
+        self._init_db()
+
+    def _init_db(self):
+        with sqlite3.connect(self.db_file) as conn:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS xp (
+                    guild_id INTEGER,
+                    user_id INTEGER,
+                    xp INTEGER DEFAULT 0,
+                    level INTEGER DEFAULT 1,
+                    PRIMARY KEY (guild_id, user_id)
+                )
+            """)
+
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if message.author.bot or not message.guild:
+            return
+
+        if random.randint(1, 5) != 1:
+            return
+
+        guild_id = message.guild.id
+        user_id = message.author.id
+
+        try:
+            with sqlite3.connect(self.db_file) as conn:
+                conn.execute(
+                    "INSERT INTO xp (guild_id, user_id, xp, level) VALUES (?, ?, 10, 1) "
+                    "ON CONFLICT(guild_id, user_id) DO UPDATE SET xp = xp + 10",
+                    (guild_id, user_id)
+                )
+                
+                cursor = conn.execute(
+                    "SELECT xp, level FROM xp WHERE guild_id = ? AND user_id = ?",
+                    (guild_id, user_id)
+                )
+                row = cursor.fetchone()
+                
+                if not row:
+                    return                    
+                new_xp, old_level = row
+                new_level = int(new_xp ** 0.5) // 10 + 1
+                
+                if new_level > old_level:
+                    conn.execute(
+                        "UPDATE xp SET level = ? WHERE guild_id = ? AND user_id = ?",
+                        (new_level, guild_id, user_id)
+                    )
+                    await message.channel.send(
+                        f"🎉 {message.author.mention} reached Level {new_level}!"
+                    )
+        except Exception as e:
+            print(f"Database error: {e}")
+
+    @commands.command()
+    async def rank(self, ctx, member: discord.Member = None):
+        if not ctx.guild:
+            return await ctx.send("⚠️ You can only use this command inside a server!")
+            
+        target = member or ctx.author
+        guild_id = ctx.guild.id
+        user_id = target.id
+
+        with sqlite3.connect(self.db_file) as conn:
+            cursor = conn.execute(
+                "SELECT level, xp FROM xp WHERE guild_id = ? AND user_id = ?", 
+                (guild_id, user_id)
+            )
+            result = cursor.fetchone()
 
         if not result:
             await ctx.send(f"{target.name} has no rank yet. Start chatting!")
@@ -136,15 +215,13 @@ async def setup(bot):
 
     @commands.command()
     async def leaderboard(self, ctx):
-        # PREVENTS CRASHES IN DMs
         if not ctx.guild:
             return await ctx.send("⚠️ You can only use this command inside a server!")
             
         guild_id = ctx.guild.id
         
         with sqlite3.connect(self.db_file) as conn:
-            cursor = conn.execute(
-                "SELECT user_id, xp, level FROM xp WHERE guild_id = ? ORDER BY xp DESC LIMIT 5", 
+            cursor = conn.execute(                "SELECT user_id, xp, level FROM xp WHERE guild_id = ? ORDER BY xp DESC LIMIT 5", 
                 (guild_id,)
             )
             top_users = cursor.fetchall()
@@ -160,3 +237,6 @@ async def setup(bot):
             embed.add_field(name=f"#{i} {name}", value=f"Level {level} | {xp} XP", inline=False)
         
         await ctx.send(embed=embed)
+
+async def setup(bot):
+    await bot.add_cog(Leveling(bot))
